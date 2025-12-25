@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stephanie Christmas</title>
+<style>
+  body { margin:0; background:#000; overflow:hidden; font-family:sans-serif; }
+  canvas { position:fixed; inset:0; }
+  #controls {
+    position:fixed; top:10px; left:10px;
+    background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;
+  }
+  button {
+    margin:4px; padding:6px 10px; border:none; border-radius:4px;
+    background:#ffd93b; font-weight:bold; cursor:pointer;
+  }
+  #title {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    color:#fff; font-size:2em; text-align:center;
+    text-shadow:0 0 10px #ff3b3b, 0 0 20px #ffd93b;
+  }
+</style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="title">Stephanie<br>Merry Christmas</div>
+  <div id="controls">
+    <button onclick="toggle('snow')">❄️ Snow</button>
+    <button onclick="toggle('fireworks')">🎆 Fireworks</button>
+    <button onclick="toggle('santa')">🎅 Santa</button>
+    <button onclick="toggle('stars')">🌌 Stars</button>
+  </div>
+
+<script>
+const c = document.getElementById("canvas");
+const ctx = c.getContext("2d");
+resize();
+window.onresize = resize;
+
+function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
+
+let active = {snow:false, fireworks:false, santa:false, stars:false};
+function toggle(name){ active[name] = !active[name]; }
+
+// ❄️ Snow
+let snowflakes = Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1}));
+
+// 🎆 Fireworks
+let particles = [];
+
+// 🌌 Stars
+let stars = Array.from({length:80},()=>({x:Math.random()*c.width,y:Math.random()*c.height*0.7}));
+
+function loop(){
+  ctx.clearRect(0,0,c.width,c.height);
+
+  if(active.stars){
+    ctx.fillStyle="white";
+    stars.forEach(s=>ctx.fillRect(s.x,s.y,1,1));
+  }
+
+  if(active.snow){
+    ctx.fillStyle="white"; ctx.globalAlpha=0.8;
+    snowflakes.forEach(f=>{
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
+      f.y+=f.r*0.3; if(f.y>c.height){ f.y=0; f.x=Math.random()*c.width; }
+    });
+  }
+
+  if(active.fireworks){
+    if(Math.random()<0.03){
+      let x=Math.random()*c.width, y=Math.random()*c.height*0.5;
+      for(let i=0;i<30;i++){
+        let ang=Math.random()*2*Math.PI, spd=Math.random()*3;
+        particles.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:80});
+      }
+    }
+    particles.forEach((p,i)=>{
+      ctx.fillStyle="hsl("+Math.random()*360+",100%,60%)";
+      ctx.globalAlpha=p.life/80;
+      ctx.fillRect(p.x,p.y,2,2);
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life--;
+      if(p.life<=0) particles.splice(i,1);
+    });
+  }
+
+  if(active.santa){
+    ctx.fillStyle="red"; ctx.globalAlpha=1;
+    let x=(Date.now()/10)%(c.width+200)-200;
+    let y=c.height*0.2+Math.sin(Date.now()/500)*20;
+    ctx.fillRect(x,y,80,30); // sleigh
+    ctx.fillStyle="brown";
+    for(let i=0;i<2;i++){ ctx.fillRect(x+100+i*50,y-10,30,10); } // reindeer
+  }
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
