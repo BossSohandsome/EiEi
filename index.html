@@ -26,9 +26,9 @@
   <div id="title">Stephanie<br>Merry Christmas</div>
   <div id="controls">
     <button onclick="toggle('snow')">❄️ Snow</button>
-    <button onclick="toggle('fireworks')">🎆 Fireworks</button>
     <button onclick="toggle('santa')">🎅 Santa</button>
     <button onclick="toggle('stars')">🌌 Stars</button>
+    <button onclick="toggle('animals')">🦌 Animals</button>
   </div>
 
 <script>
@@ -39,59 +39,76 @@ window.onresize = resize;
 
 function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
 
-let active = {snow:false, fireworks:false, santa:false, stars:false};
+let active = {snow:false, santa:false, stars:false, animals:false};
 function toggle(name){ active[name] = !active[name]; }
 
 // ❄️ Snow
-let snowflakes = Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1}));
-
-// 🎆 Fireworks
-let particles = [];
+let snowflakes = Array.from({length:100},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1}));
 
 // 🌌 Stars
-let stars = Array.from({length:80},()=>({x:Math.random()*c.width,y:Math.random()*c.height*0.7}));
+let stars = Array.from({length:60},()=>({x:Math.random()*c.width,y:Math.random()*c.height*0.7}));
+
+function drawSnow(){
+  ctx.fillStyle="white"; ctx.globalAlpha=0.8;
+  snowflakes.forEach(f=>{
+    ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
+    f.y+=f.r*0.3; if(f.y>c.height){ f.y=0; f.x=Math.random()*c.width; }
+  });
+}
+
+function drawStars(){
+  ctx.fillStyle="white"; ctx.globalAlpha=1;
+  stars.forEach(s=>ctx.fillRect(s.x,s.y,2,2));
+}
+
+// 🎅 Santa
+function drawSanta(){
+  ctx.fillStyle="red"; ctx.globalAlpha=1;
+  let x=(Date.now()/10)%(c.width+200)-200;
+  let y=c.height*0.2+Math.sin(Date.now()/500)*20;
+  ctx.fillRect(x,y,80,30); // sleigh
+  ctx.fillStyle="brown";
+  for(let i=0;i<2;i++){ ctx.fillRect(x+100+i*50,y-10,30,10); } // reindeer
+}
+
+// 🦌 Animals (simple cartoon shapes)
+let animals = [
+  {type:"reindeer",x:100,y:0.8},
+  {type:"penguin",x:300,y:0.85},
+  {type:"bear",x:500,y:0.82}
+];
+
+function drawAnimals(){
+  animals.forEach(a=>{
+    let ax=a.x, ay=c.height*a.y;
+    if(a.type==="reindeer"){
+      ctx.fillStyle="saddlebrown";
+      ctx.fillRect(ax,ay-20,40,20); // body
+      ctx.fillRect(ax+30,ay-30,15,15); // head
+      ctx.fillStyle="white"; ctx.fillRect(ax+32,ay-28,5,5); // eye
+    }
+    if(a.type==="penguin"){
+      ctx.fillStyle="black";
+      ctx.beginPath(); ctx.arc(ax,ay,20,0,Math.PI*2); ctx.fill(); // body
+      ctx.fillStyle="white"; ctx.beginPath(); ctx.arc(ax,ay+5,12,0,Math.PI*2); ctx.fill(); // belly
+      ctx.fillStyle="orange"; ctx.fillRect(ax-5,ay-20,10,6); // beak
+    }
+    if(a.type==="bear"){
+      ctx.fillStyle="white";
+      ctx.beginPath(); ctx.arc(ax,ay,25,0,Math.PI*2); ctx.fill(); // body
+      ctx.fillStyle="gray"; ctx.beginPath(); ctx.arc(ax,ay-20,15,0,Math.PI*2); ctx.fill(); // head
+      ctx.fillStyle="black"; ctx.fillRect(ax-5,ay-22,4,4); ctx.fillRect(ax+5,ay-22,4,4); // eyes
+    }
+  });
+}
 
 function loop(){
   ctx.clearRect(0,0,c.width,c.height);
 
-  if(active.stars){
-    ctx.fillStyle="white";
-    stars.forEach(s=>ctx.fillRect(s.x,s.y,1,1));
-  }
-
-  if(active.snow){
-    ctx.fillStyle="white"; ctx.globalAlpha=0.8;
-    snowflakes.forEach(f=>{
-      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
-      f.y+=f.r*0.3; if(f.y>c.height){ f.y=0; f.x=Math.random()*c.width; }
-    });
-  }
-
-  if(active.fireworks){
-    if(Math.random()<0.03){
-      let x=Math.random()*c.width, y=Math.random()*c.height*0.5;
-      for(let i=0;i<30;i++){
-        let ang=Math.random()*2*Math.PI, spd=Math.random()*3;
-        particles.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:80});
-      }
-    }
-    particles.forEach((p,i)=>{
-      ctx.fillStyle="hsl("+Math.random()*360+",100%,60%)";
-      ctx.globalAlpha=p.life/80;
-      ctx.fillRect(p.x,p.y,2,2);
-      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life--;
-      if(p.life<=0) particles.splice(i,1);
-    });
-  }
-
-  if(active.santa){
-    ctx.fillStyle="red"; ctx.globalAlpha=1;
-    let x=(Date.now()/10)%(c.width+200)-200;
-    let y=c.height*0.2+Math.sin(Date.now()/500)*20;
-    ctx.fillRect(x,y,80,30); // sleigh
-    ctx.fillStyle="brown";
-    for(let i=0;i<2;i++){ ctx.fillRect(x+100+i*50,y-10,30,10); } // reindeer
-  }
+  if(active.stars) drawStars();
+  if(active.snow) drawSnow();
+  if(active.santa) drawSanta();
+  if(active.animals) drawAnimals();
 
   requestAnimationFrame(loop);
 }
